@@ -3,10 +3,10 @@
         <div>
             <h3>{{user.id}}</h3>
             <img scr="user.profile_image_url" width="120" alt="">
-            <p>{{user.description || 'No description'}}</p>
+            <p>{{user.description || 'No deiscriotion'}}</p>
             <p>
                 <nuxt-link to="/">
-                  <small><b>トップへ戻る</b></small>
+                    <small><b>トップへ戻る</b></small>
                 </nuxt-link>
             </p>
             <h3>{{user.id}}さんの投稿一覧</h3>
@@ -20,16 +20,49 @@
                 </li>
             </ul>
         </div>
-    </section>                  
+    </section>
 </template>
 
 <script>
+// export default {
+//     head() {
+//         return {
+//             title: this.user.id
+//         }
+//     },
+//     async asyncData({ route, app }) {
+//         const user = await app.$axios.$get(`https://qiita.com/api/v2/users/${route.params.id}`)
+//         const items =
+//           await app.$axios.$get(`https://qiita.com/api/v2/items?quary=user:${route.params.id}`)
+//         return { user, items }
+//     }
+// }
+import { mapGetters } from 'vuex'
+
 export default {
-    async asyncData({ route,app }) {
-        const user = await app.$axios.$get(`https://qiita.com/api/v2/user/${route.params.id}`)
-        const item =
-          await app.$axios.$get(`https://qiita.com/api/v2/items?query=user:${route.params.id}`)
-        return { user, items }
+    head() {
+        return {
+            title: this.user.id
+        }
+    },
+    async asyncData({ route, store, redirect }) {
+        if (store.getters['users'][route.params.id]) {
+            return
+        }
+        try {
+            await store.dispatch('fetchUserInfo', { id: route.params.id })
+        } catch (e) {
+            redirect('/')
+        }
+    },
+    computed: {
+        user() {
+            return this.users[this.$route.params.id]
+        },
+        items() {
+            return this.userItems[this.$route.params.id] || []
+        },
+        ...mapGetters(['users', 'userItems'])
     }
 }
 </script>
@@ -43,14 +76,14 @@ export default {
 h3 {
     margin: 16px 0;
     padding: 8px 0;
-    border-bottom: solid 1px; 
+    border-bottom: solid 1px #e5e5e5;
 }
 
 li + li {
     margin: 16px 0;
 }
 
-p {
+p{
     margin: 8px 0;
 }
 </style>
